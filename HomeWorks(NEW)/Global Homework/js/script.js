@@ -39,7 +39,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
   // Timer
 
-  const deadline = '2020-05-17';
+  const deadline = '2020-05-11';
 
   function getTimeRemaining(endtime) {
     const t = Date.parse(endtime) - Date.parse(new Date()),
@@ -129,10 +129,7 @@ window.addEventListener('DOMContentLoaded', function () {
   // Изменил значение, чтобы не отвлекало
 
   function showModalByScroll() {
-    if (
-      window.pageYOffset + document.documentElement.clientHeight >=
-      document.documentElement.scrollHeight
-    ) {
+    if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
       openModal();
       window.removeEventListener('scroll', showModalByScroll);
     }
@@ -182,32 +179,34 @@ window.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  new MenuCard(
-    'img/tabs/vegy.jpg',
-    'vegy',
-    'Меню "Фитнес"',
-    'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-    9,
-    '.menu .container'
-  ).render();
+  getResource('http://localhost:3000/menu').then((data) => {
+    data.forEach(({ img, altimg, title, descr, price }) => {
+      new MenuCard(img, altimg, title, descr, price, '.menu .container').render();
+    });
+  });
 
-  new MenuCard(
-    'img/tabs/post.jpg',
-    'post',
-    'Меню "Постное"',
-    'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
-    14,
-    '.menu .container'
-  ).render();
+  // getResource('http://localhost:3000/menu')
+  //     .then(data => createCard(data));
 
-  new MenuCard(
-    'img/tabs/elite.jpg',
-    'elite',
-    'Меню “Премиум”',
-    'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!',
-    21,
-    '.menu .container'
-  ).render();
+  // function createCard(data) {
+  //     data.forEach(({img, altimg, title, descr, price}) => {
+  //         const element = document.createElement('div');
+
+  //         element.classList.add("menu__item");
+
+  //         element.innerHTML = `
+  //             <img src=${img} alt=${altimg}>
+  //             <h3 class="menu__item-subtitle">${title}</h3>
+  //             <div class="menu__item-descr">${descr}</div>
+  //             <div class="menu__item-divider"></div>
+  //             <div class="menu__item-price">
+  //                 <div class="menu__item-cost">Цена:</div>
+  //                 <div class="menu__item-total"><span>${price}</span> грн/день</div>
+  //             </div>
+  //         `;
+  //         document.querySelector(".menu .container").append(element);
+  //     });
+  // }
 
   // Forms
 
@@ -219,10 +218,32 @@ window.addEventListener('DOMContentLoaded', function () {
   };
 
   forms.forEach((item) => {
-    postData(item);
+    bindPostData(item);
   });
 
-  function postData(form) {
+  const postData = async (url, data) => {
+    let res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: data,
+    });
+
+    return await res.json();
+  };
+
+  async function getResource(url) {
+    let res = await fetch(url);
+
+    if (!res.ok) {
+      throw new Error(`Could not fetch ${url}, status: ${res.status}`);
+    }
+
+    return await res.json();
+  }
+
+  function bindPostData(form) {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
@@ -236,19 +257,9 @@ window.addEventListener('DOMContentLoaded', function () {
 
       const formData = new FormData(form);
 
-      const object = {};
-      formData.forEach(function (value, key) {
-        object[key] = value;
-      });
+      const json = JSON.stringify(Object.fromEntries(formData.entries()));
 
-      fetch('server.php', {
-        method: 'POST',
-        headers: {
-          'Content-type': 'application/json',
-        },
-        body: JSON.stringify(object),
-      })
-        .then((data) => data.text())
+      postData('http://localhost:3000/requests', json)
         .then((data) => {
           console.log(data);
           showThanksModal(message.success);
