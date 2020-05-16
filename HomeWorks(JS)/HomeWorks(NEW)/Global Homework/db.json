@@ -25,13 +25,8 @@
   "requests": [
     {
       "name": "German Yanovich",
-      "phone": "+3752915236329862",
-      "id": 1
-    },
-    {
-      "name": "German Yanovich",
       "phone": "+241242141",
-      "id": 2
+      "id": 1
     }
   ]
 }
